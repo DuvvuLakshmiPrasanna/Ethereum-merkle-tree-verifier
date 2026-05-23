@@ -3,18 +3,15 @@ Comprehensive unit tests for the Merkle Tree Ethereum Verifier.
 Run with: pytest tests/test_merkle.py -v
 """
 
-import sys
-import os
 import copy
 import hashlib
+
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
-from part1_tree import MerkleTree, MerkleNode, sha256_pair, verify_proof
-
+from part1_tree import MerkleTree, sha256_pair, verify_proof
 
 # ─── sha256_pair ────────────────────────────────────────────────────────────
+
 
 class TestSha256Pair:
     def test_returns_32_bytes(self):
@@ -37,6 +34,7 @@ class TestSha256Pair:
 
 
 # ─── MerkleTree Construction ─────────────────────────────────────────────────
+
 
 class TestMerkleTreeConstruction:
     def test_single_leaf(self):
@@ -85,6 +83,7 @@ class TestMerkleTreeConstruction:
 
 # ─── Proof Generation ────────────────────────────────────────────────────────
 
+
 class TestProofGeneration:
     def test_proof_returns_list(self):
         tree = MerkleTree([b"a", b"b", b"c", b"d"])
@@ -131,6 +130,7 @@ class TestProofGeneration:
 
 
 # ─── Proof Verification ──────────────────────────────────────────────────────
+
 
 class TestProofVerification:
     def test_valid_proof_index_0(self):
@@ -195,7 +195,9 @@ class TestProofVerification:
         tree = MerkleTree(items)
         for i, item in enumerate(items):
             proof = tree.get_proof(i)
-            assert verify_proof(item, proof, tree.root) is True, f"Failed for index {i}"
+            assert (
+                verify_proof(item, proof, tree.root) is True
+            ), f"Failed for index {i}"
 
     def test_verify_returns_bool(self):
         tree = MerkleTree([b"a", b"b"])
@@ -208,7 +210,10 @@ class TestProofVerification:
         tree = MerkleTree(leaves)
         for i in range(0, 64, 8):  # Check every 8th leaf
             proof = tree.get_proof(i)
-            assert verify_proof(f"transaction_{i}".encode(), proof, tree.root) is True
+            assert (
+                verify_proof(f"transaction_{i}".encode(), proof, tree.root)
+                is True
+            )
 
     def test_tamper_any_proof_step_fails(self):
         items = [b"a", b"b", b"c", b"d", b"e", b"f", b"g", b"h"]
@@ -217,11 +222,13 @@ class TestProofVerification:
         for j in range(len(proof)):
             tampered = copy.deepcopy(proof)
             tampered[j]["hash"] = b"\xab" * 32
-            assert verify_proof(b"a", tampered, tree.root) is False, \
-                f"Tampering step {j} should have failed!"
+            assert (
+                verify_proof(b"a", tampered, tree.root) is False
+            ), f"Tampering step {j} should have failed!"
 
 
 # ─── Integration: Task Example ───────────────────────────────────────────────
+
 
 class TestTaskExample:
     """Replicates the exact test cases from the task specification."""
@@ -245,9 +252,11 @@ class TestTaskExample:
 
 # ─── hash_transaction ────────────────────────────────────────────────────────
 
+
 class TestHashTransaction:
     def test_simple_hash(self):
         from part3_verify import hash_transaction_simple
+
         tx = {"hash": "0xabc123"}
         result = hash_transaction_simple(tx)
         assert len(result) == 32
@@ -255,11 +264,13 @@ class TestHashTransaction:
 
     def test_consistent_hash(self):
         from part3_verify import hash_transaction_simple
+
         tx = {"hash": "0xdeadbeef"}
         assert hash_transaction_simple(tx) == hash_transaction_simple(tx)
 
     def test_different_hashes_differ(self):
         from part3_verify import hash_transaction_simple
+
         tx1 = {"hash": "0xaaa"}
         tx2 = {"hash": "0xbbb"}
         assert hash_transaction_simple(tx1) != hash_transaction_simple(tx2)
@@ -267,9 +278,11 @@ class TestHashTransaction:
 
 # ─── reconstruct_transactions_root ───────────────────────────────────────────
 
+
 class TestReconstructRoot:
     def test_reconstruct_returns_bytes(self):
         from part3_verify import reconstruct_transactions_root
+
         txs = [{"hash": f"0x{i:064x}"} for i in range(4)]
         root = reconstruct_transactions_root(txs)
         assert isinstance(root, bytes)
@@ -277,16 +290,23 @@ class TestReconstructRoot:
 
     def test_reconstruct_deterministic(self):
         from part3_verify import reconstruct_transactions_root
+
         txs = [{"hash": "0x1"}, {"hash": "0x2"}, {"hash": "0x3"}]
-        assert reconstruct_transactions_root(txs) == reconstruct_transactions_root(txs)
+        assert reconstruct_transactions_root(
+            txs
+        ) == reconstruct_transactions_root(txs)
 
     def test_reconstruct_empty_raises(self):
         from part3_verify import reconstruct_transactions_root
+
         with pytest.raises(ValueError):
             reconstruct_transactions_root([])
 
     def test_reconstruct_changes_with_transactions(self):
         from part3_verify import reconstruct_transactions_root
+
         txs1 = [{"hash": "0x1"}, {"hash": "0x2"}]
         txs2 = [{"hash": "0x1"}, {"hash": "0x3"}]
-        assert reconstruct_transactions_root(txs1) != reconstruct_transactions_root(txs2)
+        assert reconstruct_transactions_root(
+            txs1
+        ) != reconstruct_transactions_root(txs2)

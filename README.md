@@ -4,10 +4,10 @@ A Python implementation of a Merkle tree to verify Ethereum transaction inclusio
 
 ## What This Does
 
-| Part | Description |
-|------|-------------|
-| **Part 1** | Pure Merkle tree: build, generate proofs, verify proofs |
-| **Part 2** | Fetch real Ethereum block data via JSON-RPC |
+| Part       | Description                                                    |
+| ---------- | -------------------------------------------------------------- |
+| **Part 1** | Pure Merkle tree: build, generate proofs, verify proofs        |
+| **Part 2** | Fetch real Ethereum block data via JSON-RPC                    |
 | **Part 3** | Reconstruct the transactions root + end-to-end inclusion proof |
 
 Includes all **Extension Challenges**: RLP+Keccak-256 (A), odd leaf handling (B), light client simulation (C), and historical block verification (D).
@@ -17,19 +17,16 @@ Includes all **Extension Challenges**: RLP+Keccak-256 (A), odd leaf handling (B)
 ## Project Structure
 
 ```
-merkle-ethereum/
-├── src/
-│   ├── part1_tree.py      # MerkleTree class, proof generation, verification
-│   ├── part2_fetch.py     # Ethereum JSON-RPC block fetcher
-│   └── part3_verify.py    # Root reconstruction, inclusion proofs, extensions
-├── tests/
-│   └── test_merkle.py     # Comprehensive pytest suite
-├── main.py                # Runs all parts end-to-end
+ethereum-merkle-tree-verifier/
+├── part1_tree.py
+├── part2_fetch.py
+├── part3_verify.py
 ├── requirements.txt
-├── Dockerfile
-├── docker-compose.yml
-├── .env.example
-└── README.md
+├── README.md
+├── .env
+├── tests/
+│   └── test_merkle.py
+└── venv/
 ```
 
 ---
@@ -48,22 +45,26 @@ merkle-ethereum/
 
 ```bash
 git clone <your-repo-url>
-cd merkle-ethereum
+cd ethereum-merkle-tree-verifier
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
 ### 2. Configure your RPC URL
 
 ```bash
-cp .env.example .env
-# Edit .env and fill in your ETH_RPC_URL
+# Create .env from the template
+copy .env.example .env
 ```
 
-Or export it directly:
+Then edit `.env` and set:
 
-```bash
-export ETH_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
+```env
+RPC_URL=https://ethereum.publicnode.com
 ```
+
+For a dedicated endpoint, replace it with your Alchemy or Infura URL.
 
 ---
 
@@ -72,17 +73,14 @@ export ETH_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
 ### Option A — Python directly
 
 ```bash
-# Run all parts (requires ETH_RPC_URL)
-python main.py
-
 # Run only Part 1 (no RPC needed — pure tree tests)
-python src/part1_tree.py
+python part1_tree.py
 
 # Run only Part 2 (fetch + inspect a block)
-python src/part2_fetch.py
+python part2_fetch.py
 
 # Run only Part 3 (full verification)
-python src/part3_verify.py
+python part3_verify.py
 ```
 
 ### Option B — Docker Compose
@@ -123,6 +121,7 @@ Leaves: H(alice)  H(bob)    H(carol)   H(dave)
 ```
 
 A Merkle proof for `carol` (index 2) contains:
+
 1. Sibling of carol: `H(dave)` [right]
 2. Sibling of that subtree: `H(alice, bob)` [left]
 
@@ -136,22 +135,22 @@ Every Ethereum block header contains a `transactionsRoot` — a single 32-byte h
 
 ## Key Design Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| Odd leaf duplication | Standard Merkle tree convention; prevents imbalanced trees |
-| `verify_proof` is standalone | Matches Ethereum light client model — no access to full tree |
-| SHA-256 for Option A | Validates tree structure before tackling encoding details |
-| RLP + Keccak-256 for Option B | Matches Ethereum's actual transaction hashing |
+| Decision                      | Rationale                                                    |
+| ----------------------------- | ------------------------------------------------------------ |
+| Odd leaf duplication          | Standard Merkle tree convention; prevents imbalanced trees   |
+| `verify_proof` is standalone  | Matches Ethereum light client model — no access to full tree |
+| SHA-256 for Option A          | Validates tree structure before tackling encoding details    |
+| RLP + Keccak-256 for Option B | Matches Ethereum's actual transaction hashing                |
 
 ---
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ETH_RPC_URL` | For Parts 2 & 3 | Ethereum JSON-RPC endpoint (Alchemy/Infura) |
+| Variable  | Required        | Description                                                    |
+| --------- | --------------- | -------------------------------------------------------------- |
+| `RPC_URL` | For Parts 2 & 3 | Ethereum JSON-RPC endpoint (Alchemy/Infura or public endpoint) |
 
-**Never commit your actual API key.** Only `.env.example` is committed; your `.env` is gitignored.
+**Never commit your actual API key.** The `.env` file is gitignored.
 
 ---
 
