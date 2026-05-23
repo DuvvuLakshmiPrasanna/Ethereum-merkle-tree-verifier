@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  merkle-verifier:
+    build: .
+    image: merkle-ethereum-verifier
+    container_name: merkle-verifier
+    environment:
+      - ETH_RPC_URL=${ETH_RPC_URL}
+    # Run the full end-to-end demo (requires ETH_RPC_URL)
+    command: python main.py
+
+  # Run only Part 1 (no RPC URL needed)
+  merkle-tests:
+    build: .
+    image: merkle-ethereum-verifier
+    container_name: merkle-tests
+    command: pytest tests/ -v --tb=short
+    profiles:
+      - test
+
+  # Run only the Merkle tree (Part 1) without network
+  merkle-part1:
+    build: .
+    image: merkle-ethereum-verifier
+    container_name: merkle-part1
+    command: python src/part1_tree.py
+    profiles:
+      - part1
