@@ -166,7 +166,7 @@ prove_transaction_inclusion(block, tx_index=0)
 
 ## 🧾 Notes on Docker
 
-The repo includes `docker-compose.yml` and `Dockerfile`, but the current Docker entrypoint is not aligned with the repository's Python scripts. For reliable local runs, use the Python commands directly unless you want to fix the Docker entrypoint separately.
+The repo includes `docker-compose.yml` and `Dockerfile`, and the Docker entrypoint is now aligned with a real `main.py` script. `docker compose up` runs the unified demo entrypoint, while `docker compose run --rm merkle-tests` executes the pytest suite.
 
 ## 📝 License
 

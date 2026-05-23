@@ -5,7 +5,7 @@ Part 3 - Reconstruct and Verify Ethereum Transaction Merkle Root
 import copy
 import hashlib
 
-import sha3
+from Crypto.Hash import keccak
 from dotenv import load_dotenv
 import rlp
 
@@ -17,7 +17,7 @@ load_dotenv()
 
 def keccak256(data: bytes) -> bytes:
     """Compute Keccak-256 hash (Ethereum's native hash function)."""
-    k = sha3.keccak_256()
+    k = keccak.new(digest_bits=256)
     k.update(data)
     return k.digest()
 

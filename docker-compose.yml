@@ -1,13 +1,12 @@
-version: "3.9"
-
 services:
   merkle-verifier:
     build: .
     image: merkle-ethereum-verifier
     container_name: merkle-verifier
     environment:
-      - ETH_RPC_URL=${ETH_RPC_URL}
-    # Run the full end-to-end demo (requires ETH_RPC_URL)
+      ETH_RPC_URL: ${ETH_RPC_URL:-}
+      RPC_URL: ${RPC_URL:-https://ethereum.publicnode.com}
+    # Run the unified demo entrypoint (Part 1 always runs; Part 2/3 run when RPC is configured)
     command: python main.py
 
   # Run only Part 1 (no RPC URL needed)
@@ -24,6 +23,6 @@ services:
     build: .
     image: merkle-ethereum-verifier
     container_name: merkle-part1
-    command: python src/part1_tree.py
+    command: python part1_tree.py
     profiles:
       - part1

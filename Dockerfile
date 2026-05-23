@@ -18,5 +18,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code
 COPY . .
 
-# Default: run all parts
+# Default: run the unified demo entrypoint
 CMD ["python", "main.py"]
