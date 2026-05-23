@@ -1,181 +1,173 @@
-# Merkle Tree Ethereum Transaction Verifier
+# Ethereum Merkle Tree Verifier
 
-A Python implementation of a Merkle tree to verify Ethereum transaction inclusion — from scratch.
+![Python Version](https://img.shields.io/badge/python-3.11%2B-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Last Commit](https://img.shields.io/github/last-commit/DuvvuLakshmiPrasanna/Ethereum-merkle-tree-verifier)
 
-## What This Does
+A Python implementation for building, proving, and validating Merkle inclusion paths for Ethereum transactions.
 
-| Part       | Description                                                    |
-| ---------- | -------------------------------------------------------------- |
-| **Part 1** | Pure Merkle tree: build, generate proofs, verify proofs        |
-| **Part 2** | Fetch real Ethereum block data via JSON-RPC                    |
-| **Part 3** | Reconstruct the transactions root + end-to-end inclusion proof |
+## ✨ What it does
 
-Includes all **Extension Challenges**: RLP+Keccak-256 (A), odd leaf handling (B), light client simulation (C), and historical block verification (D).
+| Part       | Description                                                                       |
+| ---------- | --------------------------------------------------------------------------------- |
+| **Part 1** | Build a Merkle tree, generate proofs, and verify inclusion locally                |
+| **Part 2** | Fetch Ethereum block data from an RPC endpoint                                    |
+| **Part 3** | Reconstruct the transactions root and validate proof paths against a block header |
 
----
+It also includes the extension work for:
 
-## Project Structure
+- **Extension A** — RLP + Keccak-256 transaction hashing
+- **Extension B** — odd leaf duplication handling
+- **Extension C** — light client style verification flow
+- **Extension D** — historical block verification
 
+## 🔖 Recommended GitHub topics / tags
+
+Add these to the repository on GitHub to improve discoverability:
+
+- `ethereum`
+- `merkle-tree`
+- `blockchain`
+- `python`
+- `cryptography`
+- `ethereum-rpc`
+- `light-client`
+- `verification`
+
+> To apply them: GitHub → Repository → Settings → General → Topics.
+
+## 🧭 Architecture diagram
+
+```mermaid
+flowchart LR
+    A[part1_tree.py] --> B[MerkleTree]
+    B --> C[Generate proof]
+    B --> D[Verify proof]
+
+    E[part2_fetch.py] --> F[Fetch block via JSON-RPC]
+    F --> G[Inspect block]
+
+    H[part3_verify.py] --> I[Reconstruct transactions root]
+    I --> J[Compare with block.transactionsRoot]
+    F --> J
+    B --> K[Light client verification]
+    J --> K
+
+    L[tests/test_merkle.py] --> B
 ```
+
+## 📁 Project structure
+
+```text
 ethereum-merkle-tree-verifier/
 ├── part1_tree.py
 ├── part2_fetch.py
 ├── part3_verify.py
 ├── requirements.txt
 ├── README.md
-├── .env
+├── .env.example
+├── docker-compose.yml
+├── Dockerfile
 ├── tests/
 │   └── test_merkle.py
-└── venv/
 ```
 
----
-
-## Prerequisites
-
-- Python 3.11+
-- A free Ethereum RPC endpoint from [Alchemy](https://www.alchemy.com/) or [Infura](https://www.infura.io/)
-- Docker + Docker Compose (for containerized runs)
-
----
-
-## Setup
+## 🚀 Quick start
 
 ### 1. Clone and install
 
 ```bash
-git clone <your-repo-url>
-cd ethereum-merkle-tree-verifier
+git clone https://github.com/DuvvuLakshmiPrasanna/Ethereum-merkle-tree-verifier.git
+cd Ethereum-merkle-tree-verifier
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure your RPC URL
+### 2. Configure your RPC endpoint
 
 ```bash
-# Create .env from the template
 copy .env.example .env
 ```
 
-Then edit `.env` and set:
+Edit `.env` and set either of these values:
 
 ```env
-RPC_URL=https://ethereum.publicnode.com
+ETH_RPC_URL=https://ethereum.publicnode.com
 ```
 
-For a dedicated endpoint, replace it with your Alchemy or Infura URL.
+`part2_fetch.py` accepts either `RPC_URL` or `ETH_RPC_URL`, while the Docker setup uses `ETH_RPC_URL`.
 
----
-
-## Running
-
-### Option A — Python directly
+### 3. Run the demos
 
 ```bash
-# Run only Part 1 (no RPC needed — pure tree tests)
 python part1_tree.py
-
-# Run only Part 2 (fetch + inspect a block)
 python part2_fetch.py
-
-# Run only Part 3 (full verification)
 python part3_verify.py
 ```
 
-### Option B — Docker Compose
-
-```bash
-# Full end-to-end (requires ETH_RPC_URL in .env)
-docker-compose up merkle-verifier
-
-# Run tests only
-docker-compose --profile test up merkle-tests
-
-# Run Part 1 only (no network needed)
-docker-compose --profile part1 up merkle-part1
-```
-
-### Option C — pytest
+### 4. Run the tests
 
 ```bash
 pytest tests/ -v
-# With coverage
-pytest tests/ -v --cov=src --cov-report=term-missing
 ```
 
----
+## 🧪 What you will see
 
-## How It Works
+### Part 1
 
-### Merkle Tree
+- A deterministic Merkle root
+- Proof generation for each leaf
+- Validation of valid and tampered proofs
+- Odd leaf handling
 
-```
-Items:  [alice]    [bob]      [carol]    [dave]
-         │          │          │          │
-Leaves: H(alice)  H(bob)    H(carol)   H(dave)
-         └────┬────┘          └────┬────┘
-           H(L,R)              H(L,R)
-              └──────────┬──────────┘
-                      Root Hash
-```
+### Part 2
 
-A Merkle proof for `carol` (index 2) contains:
+- Ethereum block inspection
+- `transactionsRoot`, `stateRoot`, gas usage, and transaction metadata
 
-1. Sibling of carol: `H(dave)` [right]
-2. Sibling of that subtree: `H(alice, bob)` [left]
+### Part 3
 
-The verifier computes: `H(H(H(carol), H(dave)), H(alice, bob))` and checks against root.
+- Comparison between the block header root and the reconstructed root
+- Proof generation for a chosen transaction index
+- Validation of tampered and incorrect proofs
+- Light client style verification path
 
-### Ethereum Connection
+## 🧠 How the verifier works
 
-Every Ethereum block header contains a `transactionsRoot` — a single 32-byte hash that cryptographically commits to every transaction in the block. This project reconstructs that root and proves individual transaction inclusion.
+### Merkle tree mechanics
 
----
+A Merkle proof for `carol` (index `2`) contains a sibling hash at each level. The verifier starts from the leaf hash, combines it with each sibling according to position (`left` or `right`), and compares the final digest with the expected root.
 
-## Key Design Decisions
+### Ethereum linkage
 
-| Decision                      | Rationale                                                    |
-| ----------------------------- | ------------------------------------------------------------ |
-| Odd leaf duplication          | Standard Merkle tree convention; prevents imbalanced trees   |
-| `verify_proof` is standalone  | Matches Ethereum light client model — no access to full tree |
-| SHA-256 for Option A          | Validates tree structure before tackling encoding details    |
-| RLP + Keccak-256 for Option B | Matches Ethereum's actual transaction hashing                |
+Every Ethereum block header includes a `transactionsRoot` that commits to the full transaction list. This project reconstructs the set of transaction hashes, rebuilds the Merkle tree, and checks whether the computed root matches the header root.
 
----
+## 🛠️ Key design decisions
 
-## Environment Variables
+| Decision                      | Rationale                                                                |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| Odd leaf duplication          | Matches the standard Merkle convention and keeps the tree balanced       |
+| Standalone proof verification | Mirrors the light client model, where only the proof and root are needed |
+| SHA-256 for Part 1            | Provides a clear, deterministic baseline for Merkle logic                |
+| RLP + Keccak-256 for Part 3   | Matches Ethereum's native transaction hashing path                       |
 
-| Variable  | Required        | Description                                                    |
-| --------- | --------------- | -------------------------------------------------------------- |
-| `RPC_URL` | For Parts 2 & 3 | Ethereum JSON-RPC endpoint (Alchemy/Infura or public endpoint) |
-
-**Never commit your actual API key.** The `.env` file is gitignored.
-
----
-
-## Extensions Implemented
-
-- **Extension A** — RLP + Keccak-256 hashing (in `part3_verify.py`, `hash_transaction_rlp`)
-- **Extension B** — Odd leaf count handling (tested in `part3_verify.py` and `tests/`)
-- **Extension C** — Light client simulation (`light_client_verify` in `part3_verify.py`)
-- **Extension D** — Historical block: pass any block number to `fetch_block(rpc_url, block_number)`
-
----
-
-## Running Historical Block Verification (Extension D)
+## Historical block verification
 
 ```python
-from src.part2_fetch import fetch_block
-from src.part3_verify import prove_transaction_inclusion
+import os
 
-# Fetch a block from ~6 months ago (approximate block number)
+from part2_fetch import fetch_block
+from part3_verify import prove_transaction_inclusion
+
 block = fetch_block(os.environ["ETH_RPC_URL"], 20_000_000)
 prove_transaction_inclusion(block, tx_index=0)
 ```
 
----
+## 🧾 Notes on Docker
 
-## License
+The repo includes `docker-compose.yml` and `Dockerfile`, but the current Docker entrypoint is not aligned with the repository's Python scripts. For reliable local runs, use the Python commands directly unless you want to fix the Docker entrypoint separately.
+
+## 📝 License
 
 MIT
